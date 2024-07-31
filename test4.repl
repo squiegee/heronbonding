@@ -1,0 +1,1539 @@
+;THIS IS THE NEW TEST FILE FOR AFTER THE RECENT EXPLOIT
+
+;BONDING - SKIP TO LINE 300
+;CLAIMING LP - SKIP TO LINE 850
+;STAKING - SKIP TO LINE 1000
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;LOAD HERON + EXCHANGE
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "./kda-env/init.repl")
+(load "./loaddex.repl")
+(begin-tx "Load heron token environment")
+
+(env-keys ["gov" "ops"])
+(env-data
+  {
+    "n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron-token-gov": {
+      "keys": ["gov"], "pred": "keys-all"
+    },
+    "init-data": {
+      "initial-supply": 9000000000000.0,
+      "accounts": [
+        {
+          "account": "ROOT",
+          "guard": {
+            "keys": ["gov"], "pred": "keys-all"
+          },
+          "percent": 0.8
+        },
+        {
+          "account": "LIQUIDITY",
+          "guard": {
+            "keys": ["gov"], "pred": "keys-all"
+          },
+          "percent": 0.2
+        }
+      ]
+    },
+    "bank-guard": {
+      "keys": [
+        "gov"
+      ],
+      "pred": "keys-all"
+    },
+    "exempt-accounts": ["bob", "bonding-pool", "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g", "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g", "jrCjRXWOY0hNebuHUx1_uWTrRd2f4_Xm67V5LFk-ZEU"],
+    "upgrade": false
+  }
+)
+(load "token.pact")
+(commit-tx)
+(begin-tx "Test init and tokenomics")
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron)
+(get-balance "ROOT")
+(get-balance "LIQUIDITY")
+(commit-tx)
+
+(begin-tx "Transfer Test")
+(env-keys ["gov"])
+(env-sigs [{
+    "key": "gov",
+    "caps": [(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.GOV)]
+}])
+(env-data {
+    "n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron-token-gov": {
+        "keys": ["gov"], "pred": "keys-all"
+      },
+    "ks": {
+        "keys": ["bob-key"],
+        "pred": "keys-all"
+    },
+    "alice": {
+        "keys": ["alice"],
+        "pred": "keys-all"
+    },
+    "FEES_ACCOUNT": {
+        "keys": ["fees-key"],
+        "pred": "keys-all"
+    },
+    "BURN_ACCOUNT": {
+        "keys": ["burn-key"],
+        "pred": "keys-all"
+    }
+})
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron)
+(create-account "FEES_ACCOUNT" (read-keyset 'FEES_ACCOUNT))
+(create-account "BURN_ACCOUNT" (read-keyset 'BURN_ACCOUNT))
+(create-account "alice" (read-keyset 'alice))
+(move-premine "bob" (read-keyset 'ks) 7000000000000.0)
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "bob")
+(coin.get-balance 'bob)
+
+(commit-tx)
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;LOAD HERONBOND TOKEN
+;;;;;;;;;;;;;;;;;;;;;;;;
+(begin-tx)
+(use basic-guards)
+(define-namespace 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 GUARD_SUCCESS GUARD_SUCCESS)
+(env-data { 'ns: 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 })
+(env-data { 'ns: 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 })
+(env-gas 0) (env-gaslog)
+(load "heronbond-token.pact")
+(env-gaslog)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.account-table)
+(commit-tx)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;LOAD LIQUIDITY BONDER
+;;;;;;;;;;;;;;;;;;;;;;;;
+(begin-tx)
+(use basic-guards)
+(define-namespace 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 GUARD_SUCCESS GUARD_SUCCESS)
+(env-data { 'ns: 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 })
+(env-data { 'ns: 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 })
+(env-gas 0) (env-gaslog)
+(load "liquidity-bonder3.pact")
+(env-gaslog)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.pools)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.pools-usage)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.bonds)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.pool-user-stats)
+(commit-tx)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;LOAD HEROBOND STAKING
+;;;;;;;;;;;;;;;;;;;;;;;;
+(begin-tx)
+(use basic-guards)
+(define-namespace 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 GUARD_SUCCESS GUARD_SUCCESS)
+(env-data { 'ns: 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 })
+(env-data { 'ns: 'n_e309f0fa7cf3a13f93a8da5325cdad32790d2070 })
+(env-gas 0) (env-gaslog)
+(load "heronbond-staking-new.pact")
+(env-gaslog)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.pools)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.pools-usage)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.stakes)
+(create-table n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.pool-user-stats)
+(commit-tx)
+
+
+;///////////////////////
+;SETUP FUNDS AND ACCOUNT
+;///////////////////////
+
+;Create test accounts and send 100000 KDA to them
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(define-keyset "test.emily" (read-keyset "k:emily"))
+(define-keyset "test.doug" (read-keyset "k:doug"))
+(env-gaslog)
+(use coin)
+(create-account "k:emily" (read-keyset "k:emily"))
+(create-account 'admin-kadena-stake (read-keyset 'admin-kadena-stake))
+(create-account "k:stuart" (read-keyset "k:stuart"))
+(create-account "k:doug" (read-keyset "k:doug"))
+(create-account "k:kitty" (read-keyset "k:kitty"))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.create-account "k:emily" (read-keyset "k:emily"))
+
+;Transfer 700,000,000 heron to k:emily to create the bonding pool
+(env-sigs [
+  { 'key: "bob-key"
+  , 'caps:
+    [(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.TRANSFER "bob" "k:emily" 70000000000.0)]
+  }])
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.TRANSFER "bob" "k:emily" 70000000000.0))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.transfer "bob" "k:emily" 70000000000.0)
+
+(coin.get-balance "k:emily")
+
+(env-sigs [
+  { 'key: "bob-key"
+  , 'caps:
+    [(coin.TRANSFER "bob" "k:kitty" 100000.0)]
+  }])
+
+(test-capability (coin.TRANSFER "bob" "k:kitty" 100000.0))
+(coin.transfer "bob" "k:kitty" 100000.0)
+
+(env-sigs [
+  { 'key: "bob-key"
+  , 'caps:
+    [(coin.TRANSFER "bob" "k:emily" 100000.0)]
+  }])
+(test-capability (coin.TRANSFER "bob" "k:emily" 100000.0))
+(coin.transfer "bob" "k:emily" 100000.0)
+
+(env-sigs [
+  { 'key: "bob-key"
+  , 'caps:
+    [(coin.TRANSFER "bob" "k:doug" 100000.0)]
+  }])
+(test-capability (coin.TRANSFER "bob" "k:doug" 100000.0))
+(coin.transfer "bob" "k:doug" 100000.0)
+
+(env-sigs [
+  { 'key: "bob-key"
+  , 'caps:
+    [(coin.TRANSFER "bob" "k:stuart" 100000.0)]
+  }])
+(test-capability (coin.TRANSFER "bob" "k:stuart" 100000.0))
+(coin.transfer "bob" "k:stuart" 100000.0)
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "k:emily")
+(coin.get-balance "k:doug")
+(coin.get-balance "k:stuart")
+(coin.get-balance "bob")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "bob")
+(env-keys ["gov" "ops" "emily"])
+(env-data
+  {
+    "n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron-token-gov": {
+      "keys": ["gov"], "pred": "keys-all"
+    },
+    "init-data": {
+      "initial-supply": 900000000000.0,
+      "accounts": [
+        {
+          "account": "ROOT",
+          "guard": {
+            "keys": ["gov"], "pred": "keys-all"
+          },
+          "percent": 0.8
+        },
+        {
+          "account": "LIQUIDITY",
+          "guard": {
+            "keys": ["gov"], "pred": "keys-all"
+          },
+          "percent": 0.2
+        }
+      ]
+    },
+    "bank-guard": {
+      "keys": [
+        "gov"
+      ],
+      "pred": "keys-all"
+    },
+    "exempt-accounts": ["bob", "bonding-pool", "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" "jrCjRXWOY0hNebuHUx1_uWTrRd2f4_Xm67V5LFk-ZEU"],
+    "upgrade": true
+    , "k:emily": ["emily"]
+  }
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.initialize)
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.move-init "k:emily" (read-keyset "k:emily") 100000.0 )
+;Emily is transfered the 100k HERONBOND tokens to send to the HERONBOND staking pool- normally amir would do this
+
+(expect "100000.0" 100000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:emily")
+)
+;Correct emily has the heronbond tokens
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-account-principal)
+;Test get account name
+
+;TEST ACCOUNTS ARE NOW READY TO TEST!
+(commit-tx)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;/////////////////////////////////////////////////////////////////////////////////////
+;//// LIQUIDTY BONDING TESTING 1
+;/////////////////////////////////////////////////////////////////////////////////////
+;These are the tests for the liquidiy bonder, which has already been deployed on chain
+;The liquidity bonder should still be upgraded post-hack with new fixes
+;The new fixes still pass all the old tests as shown below
+
+;The purpose of the liquidty bonder is to raise 100k KDA and bond it with 700b HERON
+;These tests will create a bonding pool, raise 100k, issue heronbond tokens, create the pair kda/heron at the dex
+;Users will then wait 6 months to withdraw their LP tokens
+;After the pool is funded a staking pool is created for users to stake heronbond tokens and earn heron
+;And finally at the end, we test the heronbond staking pool
+
+;First lets create our bonding pool with emily
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-20T00:00:00Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:emily")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-account-principal)
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.TRANSFER "k:emily" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 700000000.0))
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:emily" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 100000.0))
+
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-pool
+;     "bonding-pool"
+;     "Bonding Pool"
+;     8366600.165340755693 ;Total LP tokens we will distribute to bonders
+;     coin ;lp-token-side-A
+;     n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron ;lp-token-side-B
+;     coin ;token bonders bond with
+;     n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond ;heronbond is the proof token bonders recieve when they bond at the pool
+;     "k:emily" ;pool creator
+;     0.0 ;wait time 1
+;     15780000.0 ;6 months
+;     8366600.165340755693 ;emit this many tokens every 6 months
+;     0.0 ;wait time 2
+;     100000.0 ;max to raise
+;     700000000.0 ;amount to pair with raised tokens
+; )
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-pool
+    "bonding-pool"
+    "Bonding Pool"
+    8366600.165340755693 ;Total LP tokens we will distribute to bonders
+    coin ;lp-token-side-A
+    n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron ;lp-token-side-B
+    coin ;token bonders bond with
+    n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond ;heronbond is the proof token bonders recieve when they bond at the pool
+    "k:emily" ;pool creator
+    5260000.0 ;users must wait 2 months to claim rewards after pool is funded
+    15780000.0 ;users will experience a penalty for 6 months if they claim rewardds
+    8366600.165340755693 ;emit this many LP reward tokens to bonders
+    0.0 ;wait time to unbond
+    100000.0 ;max to raise
+    700000000.0 ;amount to pair with raised tokens
+)
+
+
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:emily")
+(commit-tx)
+;Correct, the pool is created, and emily has transferred in 700m HERON to the pool
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Now that the BONDING POOL is created we will simulate bonding KDA to the pool with several users- the goal is to bond 100K KDA total
+;We are going to bond and unbond to make sure users get correct amounts and everything continues to calculate correctly if someone leaves and comes back
+;We are also going to bond several times with 1 user, to make sure calculations are correct if someone bonds multiple times
+;In the end, the pool gets completely funded and liquidty is moved to the dex
+;You'll also find at the end of these tests some swap tests at the exchange
+
+;Test bonding 50000.0 KDA WITH DOUG
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-20T00:00:02Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 50000.0))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:doug"
+    50000.0
+)
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+(commit-tx)
+;Correct doug bonds 50k KDA to the pool
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Test unbonding with dougs 50k KDA
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder)
+(env-chain-data { "block-time" : (time "2024-04-20T00:00:03Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 50000.0))
+
+(expect "doug unbonds successfully" "Unbonded 50000.0 coin"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.claim "bonding-pool" "k:doug" true)
+)
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+
+(expect "100000.0 heronbond back in pool" 100000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "700000000.0 heron in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(commit-tx)
+;Doug unstaked his tokens
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Doug attempts to unbond twice and fails
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder)
+(env-chain-data { "block-time" : (time "2024-04-20T00:00:04Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 50000.0))
+
+(expect-failure "k:doug has no rewards in bonding-pool" "You have no stake in this pool."
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.claim "bonding-pool" "k:doug" true)
+)
+
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+
+(expect "100000.0 heronbond still in pool" 100000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "700000000.0 heron still in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(commit-tx)
+;Correct failure doug cannot unbond again because he just did, and so he has no tokens left to unbond from the pool
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Now we test bonding coin to the bonding pool
+;Here we will bond a total of 100k to the pool
+;This test will shuffle bonds in and out of the pool several times to show that rewards are still calculated correctly
+;Feel free to add, remove, and test more transactions to see if our contract ever malfunctions
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Bond 50k with kitty
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-20T00:00:04Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:kitty" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 50000.0))
+
+(expect "Bonded 50000.0 coin in pool bonding-pool with account k:kitty" "Bonded 50000.0 coin in pool bonding-pool with account k:kitty"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:kitty"
+    50000.0
+)
+)
+
+(expect "50000.0 heronbond in pool" 50000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "50000.0 heronbond with kitty" 50000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+)
+
+(expect "700000000.0 heron in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:kitty")
+(commit-tx)
+;Success Kitty bonds 50k KDA
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Bond 25k with doug
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-20T00:00:05Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 25000.0))
+(expect "Bonded 25000.0 coin in pool bonding-pool with account k:doug" "Bonded 25000.0 coin in pool bonding-pool with account k:doug"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:doug"
+    25000.0
+)
+)
+
+(expect "25000.0 heronbond in pool" 25000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "25000.0 heronbond with doug" 25000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+)
+
+(expect "700000000.0 heron in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - doug has bonded 25k to the pool, 75k KDA is now bonded
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Bonding 12.5k with stuart
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-21T00:00:05Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:stuart" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 12500.0))
+(expect "Bonded 12500.0 coin in pool bonding-pool with account k:stuart" "Bonded 12500.0 coin in pool bonding-pool with account k:stuart"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:stuart"
+    12500.0
+)
+)
+
+(expect "12500.0 heronbond in pool" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "12500.0 heronbond with stuart" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(expect "700000000.0 heron in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:stuart")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:stuart")
+(commit-tx)
+;Success - stuart has bonded 12.5 to the pool, 87.5k KDA is now bonded
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Test bonding 25k with doug again, 1 day after stuart, this should fail because its more than the pool can allow
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-22T00:00:09Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 25000.0))
+(expect-failure "Bond amount greater than pool can facilitate." "Bond amount greater than pool can facilitate."
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:doug"
+    25000.0
+)
+)
+
+(expect "12500.0 heronbond still in pool" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "25000.0 heronbond still with doug" 25000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+)
+
+(expect "700000000.0 heron still in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+(commit-tx)
+;Correct Failure - Doug cannot bond more tokens than the pool allows
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Unbond stuarts 12.5k
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder)
+(env-chain-data { "block-time" : (time "2024-04-22T00:00:10Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:stuart" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 12500.0))
+
+(expect "stuart unbonds successfully" "Unbonded 12500.0 coin"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.claim "bonding-pool" "k:stuart" true)
+)
+
+(expect "25000.0 heronbond in pool" 25000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "0.0 heronbond with doug" 0.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(expect "700000000.0 heron still in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(coin.get-balance "k:stuart")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:stuart")
+(commit-tx)
+;Stuart unstaked his tokens, 75k total is now bonded
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Bond 12.5k with stuart
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-23T00:00:11Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:stuart" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 12500.0))
+(expect "Bonded 12500.0 coin in pool bonding-pool with account k:stuart" "Bonded 12500.0 coin in pool bonding-pool with account k:stuart"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:stuart"
+    12500.0
+)
+)
+
+(expect "12500.0 heronbond in pool" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "12500.0 heronbond with stuart" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(expect "700000000.0 heron in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:stuart")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:stuart")
+(commit-tx)
+;Success - stuart has bonded 12.5 to the pool, 87.5k KDA is now bonded
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Bond 12.5k with doug again
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-04-23T00:00:12Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(test-capability (coin.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 12500.0))
+(expect "Bonded 12500.0 coin in pool bonding-pool with account k:doug" "Bonded 12500.0 coin in pool bonding-pool with account k:doug"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.create-bond
+    "bonding-pool"
+    "k:doug"
+    12500.0
+)
+)
+
+(expect "0.0 heronbond in pool" 0.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(expect "37500.0 heronbond with doug" 37500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+)
+
+(expect "700000000.0 heron in poool" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - doug has bonded 12.5k to the pool, now 100k KDA is bonded total
+
+
+
+;////////////////////////////////
+;Now that the pool is funded with 100k KDA, lets test moving the liquidity to a dex
+;This has already been done on chain
+
+;Test move liquidity
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-06-23T00:00:13Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-pools)
+
+(expect "700000000.0" 700000000.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+(expect "100000.0" 100000.0
+(coin.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.move-liquidity
+    "bonding-pool"
+)
+
+(expect "0.0 heron left in bonding pool cuz its moved to dex" 0.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+(expect "0.0 KDA left in bonding pool cuz its moved to dex" 0.0
+(coin.get-balance "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(commit-tx)
+;Success- the liqudity was moved to the dex
+
+;////////////////////////////////////////////////////////
+;TEST SWAP AT EXCHANGE COIN -> HERON
+;////////////////////////////////////////////////////////
+;This test is for testing swaps at the exchange, so far coin -> heron swaps work fine
+;Below this test is another swap test for heron->coin which is currently broken =(
+
+(begin-tx)
+(use kaddex.exchange)
+
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-06-23T00:00:14Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "FEES_ACCOUNT")
+
+
+(test-capability  (coin.TRANSFER "k:emily" "mY7WAIOGG5kLuLs0NcAGPUOrWBRmbmxhsHhoQS9YYuo" 8.0))
+(swap-exact-in 8.0 8.3 [coin n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron]
+    "k:emily" "k:emily" (read-keyset "k:emily") )
+
+(expect "fees are gathered from swap" 2791.37735974178695
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "FEES_ACCOUNT")
+)
+
+(commit-tx)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;TEST SWAP AT EXCHANGE HERON -> COIN
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Currently we have a problem with burning when swapping heron to coin
+;This area is commented out due to this new error we havent solved yet
+
+;
+; (begin-tx)
+; (use kaddex.exchange)
+;
+; (env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+; (env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+; (env-chain-data { "block-time" : (time "2024-06-23T00:00:15Z") })
+;
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "FEES_ACCOUNT")
+;
+;
+; (test-capability  (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.TRANSFER "k:emily" "mY7WAIOGG5kLuLs0NcAGPUOrWBRmbmxhsHhoQS9YYuo" 8.0))
+; (swap-exact-in 8.0 0.0 [n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron coin]
+;     "k:emily" "k:emily" (read-keyset "k:emily") )
+;
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "FEES_ACCOUNT")
+;
+; (expect "2791.37735974178695" 2791.37735974178695
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "FEES_ACCOUNT")
+; )
+;
+;
+; (commit-tx)
+;/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;TEST CLAIMING LP REWARDS FROM BONDING POOL
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Now lets test claiming rewards from the bonding pool
+;These tests will show that users get back the correct amount of LP tokens
+;Bonders must wait atleast 6 months or they experience a -20% penalty
+;Bonders must also return their heronbond tokens back to the bonding pool
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Claim rewards EARLY with stuart to recieve a -20% penalty
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder)
+(env-chain-data { "block-time" : (time "2024-08-24T00:00:14Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+
+(expect-failure "read: row not found: coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron:k:stuart" "read: row not found: coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron:k:stuart"
+(kaddex.tokens.get-balance "coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+)
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:stuart" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 12500.0))
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.claim "bonding-pool" "k:stuart" false)
+;Awarded k:stuart with 836660.016534075569 coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron instead of 1045825.020667594461 for withdrawing before "2024-12-22T15:20:13Z"
+
+(expect "stuart withdraws 836660.016534075569 LP tokens" 836660.016534075569
+(kaddex.tokens.get-balance "coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "k:stuart")
+)
+
+(expect "stuart returns his heronbond" 0.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+
+(coin.get-balance "k:stuart")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:stuart")
+(rollback-tx)
+;(commit-tx)
+;Stuart claimed his rewards and recieved a -20% penalty for claiming early.
+;We rollback the transaction so stuart can test staking in further tests
+;Commit this transaction and uncomment the transaction below to test stuart attempting to claim rewards twice
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ;Here we attempt to claim rewards again with stuart when he has no rewards to claim and show that he fails- you have to COMMIT THE TRANSACTION BEFORE THIS ONE AND UNCOMMENT to test this
+; ;Stuart already claimed his LP tokens from the bonding pool so he cant claim anymore
+; (begin-tx)
+; (use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder)
+; (env-chain-data { "block-time" : (time "2024-12-24T00:00:14Z") })
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+;
+; (expect "stuart has 836660.016534075569 LP tokens" 836660.016534075569
+; (kaddex.tokens.get-balance "coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "k:stuart")
+; )
+;
+; (test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:stuart" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 12500.0))
+;
+; (expect "stuart already claimed his rewards from the pool" "k:stuart has no rewards in bonding-pool"
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.claim "bonding-pool" "k:stuart" false)
+; )
+;
+;
+; (expect "stuart still only has 836660.016534075569 LP tokens" 836660.016534075569
+; (kaddex.tokens.get-balance "coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "k:stuart")
+; )
+;
+; (coin.get-balance "k:stuart")
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+; (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:stuart")
+; (commit-tx)
+; ;Correct - Stuart cannot claim rewards twice
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Here we show that people can claim rewards properly 6 months later
+
+;Claim rewards with doug 6 months later with no penalty
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder)
+(env-chain-data { "block-time" : (time "2024-12-24T00:00:14Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+
+(expect-failure "read: row not found: coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron:k:doug" "read: row not found: coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron:k:doug"
+(kaddex.tokens.get-balance "coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "k:doug")
+)
+
+(expect "doug has 37500 heronbond he must return to the bonding pool" 37500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+)
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 37500.0))
+
+(expect "Awarded k:doug with 3137475.062002783384 coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "Awarded k:doug with 3137475.062002783384 coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.claim "bonding-pool" "k:doug" false)
+)
+
+(expect "doug withdraws 3137475.062002783384 LP tokens" 3137475.062002783384
+(kaddex.tokens.get-balance "coin:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron" "k:doug")
+)
+
+(expect "doug returned his heronbond" 0.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+)
+
+
+(coin.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-pool-info "bonding-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.liquidity-bonder.get-all-user-pools "k:doug")
+(rollback-tx)
+;Correct - Doug claimed his LP tokens
+;We rollback this transaction so doug can test staking in the tests below
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;LP claims are working properly
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;///////////////////////////////////////////////////////////////////////////////////
+;//HERONBOND STAKING POOL POST HACK TESTING #2
+;///////////////////////////////////////////////////////////////////////////////////
+;This test differs a little bit more than the previous tests in test3.repl
+
+;We start below with a pool that simulates our current pool on-chain, and we stake 2 users into the pool (Doug and Kitty)
+;Doug is going to stake 75% of the pool and kitty 25%
+
+
+;This pool splits 54794.0 tokens between stakers every 86400.0 seconds
+
+;Since doug staked 75% of the pool he will earn 75% of the rewards
+;Kitty stakes 25% of the pool and he will earn 25% of the rewards
+
+;This time however, we are going to stake a different times
+;This means doug will be 100% of the pool for a single day, and then kitty will stake
+;This will allow us to see the formula split 100% of rewards to doug on the first day, and then 75% the next day for doug and 25% the next day for kitty
+
+;Create staking pool
+(begin-tx)
+(test-capability  (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.TRANSFER "k:emily" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 20000000.0))
+(env-chain-data { "block-time" : (time "2024-06-23T00:00:14Z") })
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.create-pool
+    "heronbond-staking-pool" ;pool id
+    "Test Heronbond Staking Pool" ;pool name
+    20000000.0 ;20m heron total distributed to stakers
+    n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron ;stakers earn heron
+    n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond ;stakers stake heronbond
+    "k:emily" ;pool creator
+    0.0 ;claim wait time
+    86400.0 ;1 day
+    54794.0 ;emit 54794.0 tokens every 86400.0 seconds
+    0.0 ;withdraw wait time
+)
+(commit-tx)
+;Success our pool is created
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Now we will stake funds into the pool with Doug twice
+;Doug will stake a total of 75 HERONBOND tokens, which will eventually make up 75% of the pool, which means doug will withdraw 75% of rewards each day
+;Doug will stake 50 tokens on 1 day, and 25 tokens the next day- Note how the multiplier changes
+
+;STAKE 50.0 HERONBOND with doug
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-06-23T16:20:00Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 50.0))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.create-stake
+    "heronbond-staking-pool"
+    "k:doug"
+    50.0
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(expect-failure "with-read: row not found: k:doug" "with-read: row not found: k:doug"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - doug has bonded 50.0 HERONBOND to the STAKING POOL and will now earn HERON
+
+;STAKE 25.0 HERONBOND with doug 1 DAY LATER
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-06-24T16:20:00Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:doug" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 25.0))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.create-stake
+    "heronbond-staking-pool"
+    "k:doug"
+    25.0
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(expect "doug earned 54794.000000000000" 54794.000000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - doug has bonded 25 more HERONBOND for a total of 75.0 HERONBOND now
+;Note how doug has 54794 heron now, this is because he was the only one staked with 50 tokens in the pool, therefore he earned 100% of rewards for that day which is 54794
+
+;;//////////////////////////
+;Now lets stake another user into the pool - Kitty
+;Kitty will stake 25 HERONBOND tokens in the pool, and makes up 25% of the pool, which means kitty should earn 25% of the rewards each day and doug should earn 75% each day
+
+;STAKE 25 HERONBOND with kitty
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-06-24T16:20:01Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.TRANSFER "k:kitty" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 25.0))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.create-stake
+    "heronbond-staking-pool"
+    "k:kitty"
+    25.0
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:kitty")
+(commit-tx)
+;Success - kitty has bonded 25 HERONBOND to the STAKING POOL and will now earn HERON
+;With 25 tokens in the pool kitty makes up 25% of the pool, which means he will earn 25% of the 54794 tokens that are emitted to stakers per day
+
+;/////////////////////////////////
+
+;Test claim rewards function a before rewards are available with doug
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+(env-chain-data { "block-time" : (time "2024-06-24T17:02:19Z") })
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(expect-failure "doug cannot claim early" "You have no rewards to claim in this pool."
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-multiplier "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(expect "doug hasnt earned any new rewards yet" 54794.000000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(rollback-tx)
+;Success - Doug did NOT steal 200m coins when he unstaked and while 0.0 rewards were available
+;We ROLLBACK this transaction so we can continue testing with 2 stakers in the pool to show rewards are still calculated correctly
+;This test shows us that we fixed our original bug, and that people can unstake properly when 0.0 rewards are due and the exploit doesnt occur
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Lets test and make sure someone who isnt even staked in this pool cannot claim or unstake
+;Here we use k:stuart to attempt to claim rewards and unstake from a pool stuart never staked in
+
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:19Z") })
+
+(expect "12500.0" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(expect-failure "stuart doesnt belong to this pool and unstakes nothing" "read: row not found: k:stuart:heronbond-staking-pool"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+
+(expect-failure "stuart has no heron" "with-read: row not found: k:stuart"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:stuart")
+)
+
+(expect "12500.0" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:stuart")
+(rollback-tx)
+;Correct - Stuart cannot claim rewards from the pool because he has no staked into this pool
+
+;Now lets make sure stuart cannot unstake
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:19Z") })
+
+(expect "12500.0" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(expect-failure "stuart doesnt belong to this pool and unstakes nothing" "read: row not found: k:stuart:heronbond-staking-pool"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.unstake "heronbond-staking-pool" "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+
+(expect-failure "stuart has no heron" "with-read: row not found: k:stuart"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:stuart")
+)
+
+(expect "12500.0" 12500.0
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:stuart")
+(rollback-tx)
+;Correct - Stuart cannot unstake from the pool because he has no staked into this pool
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Add 200m balance to pool
+;This test shows we can add 200m tokens back to our pool and rewards still come out the same for each user
+;Even by adding more rewards doug will still be owed 75% and kitty 25%
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["k:admin-kadena-stake"], "k:admin-factory-treasury": ["admin-factory-treasury"], "admin-factory-treasury": ["k:admin-factory-treasury"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["operate", "emily", "stuart", "doug", "kitty", "swap-user", "swap-admin", "k:admin-kadena-stake", "k:adminfactory", "k:admin-factory-treasury", "admin-factory-treasury"])
+(env-chain-data { "block-time" : (time "2024-06-25T18:02:19Z") })
+
+(test-capability (n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.TRANSFER "k:emily" "u:n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.enforce-private-reserve:DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g" 20000000.0))
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.add-balance-to-pool
+    "heronbond-staking-pool"
+    "k:emily"
+    20000000.0
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(commit-tx)
+;Succes - 200m is added to the pool as rewards
+
+; ;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Test claim rewards function a day later with doug
+;Doug staked 75 tokens which means he should get 75% of the daily token emissions (54794.0) which is 41095.5
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:19Z") })
+
+(expect "Rewarded k:doug with 41095.500000000000 heron" "Rewarded k:doug with 41095.500000000000 heron"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(expect "doug withdraws 75%" 95889.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - Doug got paid 41095.500000000000 heron which is 75% of 54794.0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Test claim rewards function with kitty a milisecond after doug
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:20Z") })
+
+(expect "Rewarded k:kitty with 13698.500000000000 heron" "Rewarded k:kitty with 13698.500000000000 heron"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(expect "kitty withdraws 25%" 13698.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:kitty")
+(commit-tx)
+;Success - Kitty got paid 13698.500000000000 heron which is 25% of 54794.0
+
+; ;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Test claim rewards function again with doug 1ms after kitty
+;Doug is going to attempt to claim tokens when he isnt owed any tokens and should get 0 rewards
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:21Z") })
+
+(expect-failure "doug gets no rewards because he just claimed his rewards" "You have no rewards to claim in this pool."
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(expect "doug has no new tokens" 95889.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - Doug got paid 0 heron
+;This test shows that when a user gets 0.0 rewards they no longer drain the pool
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;All the behavior above is correct
+;Doug will continue to withdraw 75% of the pool untll he unstakes or the pool runs out of rewards
+;Kitty will continue to withdraw 25% of the pool until he unstakes or the pool runs out of rewards
+;Now lets test and make sure stakers cant claim twice in one day
+
+;Test claim rewards function a ms later with kitty
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-rewards "heronbond-staking-pool" "k:kitty" )
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:22Z") })
+
+(expect-failure "kitty has no rewards to claim in this pool." "You have no rewards to claim in this pool."
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(expect "balance check is good" 13698.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:kitty")
+(commit-tx)
+;Success - Kitty couldnt withdraw anything because he has no rewards yet- rewards are released every day and kitty already claimed his rewards today
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Now lets test if kitty can get rewards if he withdraws his stake
+
+;Test unstake function a minute later with kitty
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-rewards "heronbond-staking-pool" "k:kitty" )
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:23Z") })
+
+(expect "kitty unstakes" "Rewarded k:kitty with 0.0 n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron and unstaked 25.0 n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.unstake "heronbond-staking-pool" "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(expect "balance check is good" 13698.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:kitty")
+(commit-tx)
+;Success - Kitty unstakes and gets his staked tokens back, and 0 rewards because he already claimed his rewards today
+
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.calculate-rewards "heronbond-staking-pool" "k:kitty" )
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:02:24Z") })
+
+(expect-failure "kitty cannot unstake" "You have no stake in this pool."
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.unstake "heronbond-staking-pool" "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:kitty")
+
+(expect "balance check is good" 13698.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:kitty")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:kitty")
+(commit-tx)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;At this point only doug is in the pool because kitty has unstaked
+;Now that doug is the only person in the pool, he should stop getting 75% rewards per day, and he should get 100% of rewards each day
+;Now lets test claiming rewards 1 day later again with Doug to make sure that works
+
+;Test claim rewards function a day later with doug
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+;(env-chain-data { "block-time" : (time "2024-06-25T17:02:21Z") })
+
+(env-chain-data { "block-time" : (time "2024-06-26T17:02:24Z") })
+
+
+
+(expect "Doug claims 100% of pool now" "Rewarded k:doug with 54794.000000000000 heron"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(expect "doug withdraws 100% now." 150683.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(commit-tx)
+;Success - Doug got paid 54794.000000000000 heron which is 100% of 54794.0
+;Last time doug claimed rewards kitty was in the pool and doug claimed 41095.500000000000 tokens per day since kitty was 25% of the pool
+
+;Test claim rewards function a day later with doug
+;Here we test again to make sure doug claims 100% of rewards the next day
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+
+(env-chain-data { "block-time" : (time "2024-06-27T17:02:25Z") })
+
+
+
+(expect "Doug claims 100% of pool now" "Rewarded k:doug with 54794.000000000000 heron"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:doug")
+
+(expect "doug withdraws 100% now." 205477.500000000000
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:doug")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:doug")
+(commit-tx)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Correct, doug withdraws 100% again
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;FInally lets test attempting to withdraw coins with a user who is not staked in the pool
+;We will test claiming rewards with stuart even though hes never staked into the pool and we fail
+
+;Test claim rewards with unknown account stuart
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:04:21Z") })
+
+(expect-failure "k:stuart has no rewards in heronbond-staking-pool" "read: row not found: k:stuart:heronbond-staking-pool"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.claim-rewards "heronbond-staking-pool" "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+
+(expect-failure "with-read: row not found: k:stuart" "with-read: row not found: k:stuart"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:stuart")
+(commit-tx)
+;Correct- Stuart withdraws nothing because he does not belong to this pool
+
+;Test unstaking function with stuart
+(begin-tx)
+(use n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+
+(env-chain-data { "block-time" : (time "2024-06-25T17:04:21Z") })
+
+(expect-failure "k:stuart has no rewards in heronbond-staking-pool" "read: row not found: k:stuart:heronbond-staking-pool"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.unstake "heronbond-staking-pool" "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-pool-info "heronbond-staking-pool")
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond.get-balance "k:stuart")
+
+(expect-failure "with-read: row not found: k:stuart" "with-read: row not found: k:stuart"
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heron.get-balance "k:stuart")
+)
+
+(n_e309f0fa7cf3a13f93a8da5325cdad32790d2070.heronbond-staking.get-all-user-pools "k:stuart")
+(commit-tx)
+;Correct- Stuart withdraws nothing because he does not belong to this pool
